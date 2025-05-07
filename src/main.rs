@@ -10,31 +10,42 @@ define_language! {
         "Sort" = Sort(Id),
         "List" = List(Vec<Id>),
         "Op" = Op(Vec<Id>),
-        "Appl" = Appl([Id; 2]),
+        "Appl" = Appl(Vec<Id>),
+        "Inhabitant" = Inhabitant([Id; 2]),
+        "Mk" = Mk([Id; 1]),
         Symbol(String),
     }
 }
 
 fn make_rules() -> Vec<Rewrite<Rare, ()>> {
     vec![
+        rewrite!("func_dependency"; "(Func ?v (~ ?x ?y))" => "(Func (Mk ?v) (~ ?x ?y))"),
+
         rewrite!("func_apply"; "(Func Top (~ ?x ?y))" => "Top"),
-        rewrite!("reduction1"; "(Func Top (~ ?x ?y))" => " (~ ?x ?y)"),
+      // rewrite!("func_apply2"; "(Func (Func Top (~ ?a ?b)) (~ ?c ?d))" => "(Func (~ ?a ?b) (~ ?c ?d))"),
+
      //  rewrite!("reduction2"; "(Func Top (~ ?x ?y))" => "?x"),
     //   rewrite!("reduction3"; "(Func Top (~ ?x ?y))" => "?y"),
 
        // rewrite!("func_recu"; "?x" => "(Func ?x ?x)"),
-        rewrite!("eq_trans_reduction"; "(Appl ?y (~ ?x ?z))" 
-           => "(Func (~ ?x ?y) (Func (~ ?y ?z) (~ ?x ?z))))))"),
-       rewrite!("ignore"; "(~ ?x ?z)" => "(Appl Bool (~ ?x ?z))"),
+       rewrite!("eq_trans_reduction"; "(Appl (Inhabitant Bool ?y) (Inhabitant Bool ?x) (Inhabitant Bool ?z)))" 
+       => "(Func (~ ?x ?y) (Func (~ ?y ?z) (~ ?x ?z))))))"),
+
+       rewrite!("ignore"; "(Mk (~ ?x ?z))" => "(Appl any (Inhabitant Bool ?x) (Inhabitant Bool ?z))"),
+
+       rewrite!("goal_test"; "(Appl (Inhabitant Bool ?x))" 
+       => "(Func (~ t1 t3) (~ ?x goal))"),
+       rewrite!("ignore2"; "(Mk (~ ?x goal))" => "(Appl (Inhabitant Bool ?x))"),
 
         //rewrite!("eq_sym_reduction2"; "(~ ?x ?y)" => "(Func (~ ?x true) (Func (~ ?y false) (~ true false)))"),
 
     //    rewrite!("eq_sym_ground"; "(Func (~ ?x ?y) (~ ?y ?x))" => "Top"),
         rewrite!("base1"; "(~ t1 t2)" => "Top"),
         rewrite!("base2"; "(~ t2 t3)" => "Top"),
-       // rewrite!("type1"; "Bool" => "t1"),
-        rewrite!("type2"; "Bool" => "t2"),
-      //  rewrite!("type3"; "Bool" => "t3"),
+
+        rewrite!("type1"; "any" => "(Inhabitant Bool t1)"),
+        rewrite!("type2"; "any" => "(Inhabitant Bool t2)"),
+        rewrite!("type3"; "any" => "(Inhabitant Bool t3)"),
 
     ]
 }
@@ -67,5 +78,5 @@ fn simplify(head: &str, s: Vec<&str>) -> String {
 }
 
 fn main() {
-    println!("{0}", simplify("(~ t1 t3)", vec![]));
+    println!("{0}", simplify("(Mk (~ t1 goal))", vec![]));
 }
