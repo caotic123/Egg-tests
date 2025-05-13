@@ -1,0 +1,29 @@
+(datatype rare-Bool (rare-True) (rare-False))
+(datatype rare-Val (rare-MkInt i64) (rare-MkBool rare-Bool))
+(function rare-* (rare-Val i64 rare-Val) i64 :no-merge)
+(function rare-and (rare-Bool rare-Bool) rare-Bool :no-merge)
+(function rare-bvult (rare-Val rare-Val) rare-Bool :no-merge)
+(function rare-ite (rare-Bool rare-Bool rare-Bool) rare-Bool :no-merge)
+(function rare-not (rare-Val) rare-Bool :no-merge)
+(function rare-or (rare-Bool rare-Bool rare-Bool) rare-Bool :no-merge)
+;; =========================================
+
+;; ---- compiled Rare rules ----
+;; rare‑rule: or_true_bool
+(rewrite (rare-or rare-True ?t1 ?t2) rare-True :when ((= ?t1 rare-True)))
+;; rare‑rule: arith-mul-zero
+(rewrite (rare-* ?t1 0 ?s1) 0)
+;; rare‑rule: uf-int2bv-bvult-equiv
+(rewrite (rare-bvult ?t1 ?s1) (rare-bvult ?s1 ?t1))
+;; rare‑rule: ite-else-false
+(rewrite (rare-ite ?c1 ?x1 rare-False) (rare-and ?c1 ?x1))
+;; rare‑rule: test
+(rewrite (rare-or ?c1 rare-True) rare-True)
+;; rare‑rule: eq-symm
+(rewrite (= ?t1 ?s1) (= ?s1 ?t1))
+;; rare‑rule: bool-double-not-elim
+(rewrite (rare-not (rare-not ?t1)) ?t1)
+;; rare‑rule: explosion
+(rule ((= ?t1 rare-True) (= ?t1 rare-False)) ((union rare-True rare-False)))
+;; rare‑rule: symmetry
+(rule ((= ?t1 ?t2)) ((union ?t2 ?t1)))
