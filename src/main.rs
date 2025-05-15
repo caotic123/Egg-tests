@@ -10,7 +10,8 @@ define_language! {
         "Sort" = Sort(Id),
         "List" = List(Vec<Id>),
         "Op" = Op(Vec<Id>),
-        "Appl" = Appl(Vec<Id>),
+        "Inst" = Inst(Vec<Id>),
+        "Ground" = Ground(Id),
         "Inhabitant" = Inhabitant([Id; 2]),
         "Mk" = Mk([Id; 1]),
         Symbol(String),
@@ -21,27 +22,35 @@ fn make_rules() -> Vec<Rewrite<Rare, ()>> {
     vec![
         rewrite!("func_dependency"; "(Func ?v (~ ?x ?y))" => "(Func (Mk ?v) (~ ?x ?y))"),
 
-        rewrite!("func_apply"; "(Func Top (~ ?x ?y))" => "Top"),
-      // rewrite!("func_apply2"; "(Func (Func Top (~ ?a ?b)) (~ ?c ?d))" => "(Func (~ ?a ?b) (~ ?c ?d))"),
+        rewrite!("func_Insty"; "(Func Top (~ ?x ?y))" => "Top"),
+      rewrite!("func_Insty2"; "(Func (Func Top (~ ?a ?b)) (~ ?c ?d))" => "(Func (~ ?a ?b) (~ ?c ?d))"),
 
-     //  rewrite!("reduction2"; "(Func Top (~ ?x ?y))" => "?x"),
-    //   rewrite!("reduction3"; "(Func Top (~ ?x ?y))" => "?y"),
+      rewrite!("reduction2"; "(Func Top (~ ?x ?y))" => "?x"),
+      rewrite!("reduction3"; "(Func Top (~ ?x ?y))" => "?y"),
 
-       // rewrite!("func_recu"; "?x" => "(Func ?x ?x)"),
-       rewrite!("eq_trans_reduction"; "(Appl (Inhabitant Bool ?y) (Inhabitant Bool ?x) (Inhabitant Bool ?z)))" 
+    //   rewrite!("func_recu"; "?x" => "(Func ?x ?x)"),
+       rewrite!("eq_trans_reduction"; "(Inst (Inhabitant Bool ?y) (Inhabitant Bool ?x) (Inhabitant Bool ?z)))" 
        => "(Func (~ ?x ?y) (Func (~ ?y ?z) (~ ?x ?z))))))"),
 
-       rewrite!("ignore"; "(Mk (~ ?x ?z))" => "(Appl any (Inhabitant Bool ?x) (Inhabitant Bool ?z))"),
+       rewrite!("ignore"; "(Mk (~ ?x ?z))" => "(Inst any (Ground ?x) (Ground ?z))"),
 
-       rewrite!("goal_test"; "(Appl (Inhabitant Bool ?x))" 
+       rewrite!("goal_test"; "(Inst eq_trans (Inhabitant Bool ?x))" 
        => "(Func (~ t1 t3) (~ ?x goal))"),
-       rewrite!("ignore2"; "(Mk (~ ?x goal))" => "(Appl (Inhabitant Bool ?x))"),
+       rewrite!("ignore2"; "(Mk (~ ?x goal))" => "(Inst eq_trans (Ground ?x))"),
+
+       rewrite!("eq_refl"; "(Inst eq_refl (Inhabitant ?p ?x))" 
+       => "(Func Top (~ ?x ?x))"),
+       rewrite!("inst_eq_refl"; "(Mk (~ ?x ?x))" => "(Inst eq_refl (Ground ?x))"),
+
 
         //rewrite!("eq_sym_reduction2"; "(~ ?x ?y)" => "(Func (~ ?x true) (Func (~ ?y false) (~ true false)))"),
 
     //    rewrite!("eq_sym_ground"; "(Func (~ ?x ?y) (~ ?y ?x))" => "Top"),
         rewrite!("base1"; "(~ t1 t2)" => "Top"),
         rewrite!("base2"; "(~ t2 t3)" => "Top"),
+        rewrite!("t1"; "(Ground t1)" => "(Inhabitant Bool t1)"),
+        rewrite!("t2"; "(Ground t2)" => "(Inhabitant Bool t2)"),
+        rewrite!("t3"; "(Ground t3)" => "(Inhabitant Bool t3)"),
 
         rewrite!("type1"; "any" => "(Inhabitant Bool t1)"),
         rewrite!("type2"; "any" => "(Inhabitant Bool t2)"),
